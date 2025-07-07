@@ -20,92 +20,77 @@ This project demonstrates the implementation of a Library Management System usin
 ## Project Structure
 
 ### 1. Database Setup
-![ERD]([https://github.com/najirh/Library-System-Management---P2/blob/main/library_erd.png](https://github.com/harshavardhanBOMMALATA/library_management_system/blob/d877d6551375461533debff6ed02358a2f63a2f1/Screenshot%202025-07-06%20205529.png))
+![ERD](erd.png)
 
 - **Database Creation**: Created a database named `library_db`.
 - **Table Creation**: Created tables for branches, employees, members, books, issued status, and return status. Each table includes relevant columns and relationships.
 
 ```sql
-CREATE DATABASE library_db;
+-- library management
+create database if not exists library;
+use library;
 
-DROP TABLE IF EXISTS branch;
-CREATE TABLE branch
-(
-            branch_id VARCHAR(10) PRIMARY KEY,
-            manager_id VARCHAR(10),
-            branch_address VARCHAR(30),
-            contact_no VARCHAR(15)
-);
+-- create tables employees,members,books,issuedstatus,returnstatus,branch
+create table branch(
+   branch_id varchar(10) primary key,
+   manager_id varchar(10),
+   branch_address varchar(100),
+   contact_no varchar(10)
+   );
 
+create table employees(
+    employee_id varchar(10) primary key,
+    employee_name varchar(100),
+    position varchar(100),
+    salary decimal(10,2),
+    branch_id varchar(10),
+    foreign key(branch_id) references branch(branch_id)
+    );
+create table members(
+    member_id varchar(10) primary key,
+    member_name varchar(100),
+    member_address varchar(100),
+    reg_date date
+    );
+    
+create table books(
+    isbn varchar(50) primary key,
+    book_title varchar(80),
+    category varchar(30),
+    rental_price decimal(10,2),
+    status varchar(10),
+    author varchar(30),
+    publisher varchar(30)
+    );
+    
+create table issue_status(
+    issued_id varchar(10) primary key,
+    issued_member_id varchar(10),
+    issued_book_name varchar(100),
+    issued_book_isbn varchar(50),
+    issued_date date,
+    issued_emp_id varchar(10),
+    foreign key(issued_book_isbn) references books(isbn),
+    foreign key(issued_emp_id) references employees(employee_id),
+    foreign key(issued_member_id) references members(member_id)
+    );
+    
+create table return_status(
+    return_id varchar(10) primary key,
+    issued_id varchar(30),
+    return_date date,
+    return_book_name varchar(80),
+    return_book_isbn varchar(50),
+    foreign key(return_book_isbn) references books(isbn)
+    );
 
--- Create table "Employee"
-DROP TABLE IF EXISTS employees;
-CREATE TABLE employees
-(
-            emp_id VARCHAR(10) PRIMARY KEY,
-            emp_name VARCHAR(30),
-            position VARCHAR(30),
-            salary DECIMAL(10,2),
-            branch_id VARCHAR(10),
-            FOREIGN KEY (branch_id) REFERENCES  branch(branch_id)
-);
-
-
--- Create table "Members"
-DROP TABLE IF EXISTS members;
-CREATE TABLE members
-(
-            member_id VARCHAR(10) PRIMARY KEY,
-            member_name VARCHAR(30),
-            member_address VARCHAR(30),
-            reg_date DATE
-);
-
-
-
--- Create table "Books"
-DROP TABLE IF EXISTS books;
-CREATE TABLE books
-(
-            isbn VARCHAR(50) PRIMARY KEY,
-            book_title VARCHAR(80),
-            category VARCHAR(30),
-            rental_price DECIMAL(10,2),
-            status VARCHAR(10),
-            author VARCHAR(30),
-            publisher VARCHAR(30)
-);
-
-
-
--- Create table "IssueStatus"
-DROP TABLE IF EXISTS issued_status;
-CREATE TABLE issued_status
-(
-            issued_id VARCHAR(10) PRIMARY KEY,
-            issued_member_id VARCHAR(30),
-            issued_book_name VARCHAR(80),
-            issued_date DATE,
-            issued_book_isbn VARCHAR(50),
-            issued_emp_id VARCHAR(10),
-            FOREIGN KEY (issued_member_id) REFERENCES members(member_id),
-            FOREIGN KEY (issued_emp_id) REFERENCES employees(emp_id),
-            FOREIGN KEY (issued_book_isbn) REFERENCES books(isbn) 
-);
-
-
-
--- Create table "ReturnStatus"
-DROP TABLE IF EXISTS return_status;
-CREATE TABLE return_status
-(
-            return_id VARCHAR(10) PRIMARY KEY,
-            issued_id VARCHAR(30),
-            return_book_name VARCHAR(80),
-            return_date DATE,
-            return_book_isbn VARCHAR(50),
-            FOREIGN KEY (return_book_isbn) REFERENCES books(isbn)
-);
+desc branch;
+desc employees;
+desc members;
+desc books;
+desc issue_status;
+desc return_status;
+alter table branch modify contact_no varchar(15);
 
 ```
 
@@ -120,31 +105,36 @@ CREATE TABLE return_status
 -- "978-1-60129-456-2', 'To Kill a Mockingbird', 'Classic', 6.00, 'yes', 'Harper Lee', 'J.B. Lippincott & Co.')"
 
 ```sql
-INSERT INTO books(isbn, book_title, category, rental_price, status, author, publisher)
-VALUES('978-1-60129-456-2', 'To Kill a Mockingbird', 'Classic', 6.00, 'yes', 'Harper Lee', 'J.B. Lippincott & Co.');
-SELECT * FROM books;
+select *from books;
+insert into books 
+values('978-1-60129-456-2', 'To Kill a Mockingbird', 'Classic', 6.00, 'yes', 'Harper Lee', 'J.B. Lippincott & Co.');
+select *from books;
 ```
 **Task 2: Update an Existing Member's Address**
 
 ```sql
-UPDATE members
-SET member_address = '125 Oak St'
-WHERE member_id = 'C103';
+select *from members;
+update members 
+set member_address='123 royal street'
+where member_id='C101';
+select *from members;
 ```
 
 **Task 3: Delete a Record from the Issued Status Table**
 -- Objective: Delete the record with issued_id = 'IS121' from the issued_status table.
 
 ```sql
-DELETE FROM issued_status
-WHERE   issued_id =   'IS121';
+select *from issue_status;
+delete from issue_status 
+where issued_id='IS104';
 ```
 
 **Task 4: Retrieve All Books Issued by a Specific Employee**
 -- Objective: Select all books issued by the employee with emp_id = 'E101'.
 ```sql
-SELECT * FROM issued_status
-WHERE issued_emp_id = 'E101'
+select *from issue_status;
+select *from issue_status 
+where issued_emp_id='E101';
 ```
 
 
@@ -152,12 +142,11 @@ WHERE issued_emp_id = 'E101'
 -- Objective: Use GROUP BY to find members who have issued more than one book.
 
 ```sql
-SELECT
-    issued_emp_id,
-    COUNT(*)
-FROM issued_status
-GROUP BY 1
-HAVING COUNT(*) > 1
+select *from issue_status;
+select count(*) as books_count,issued_emp_id from issue_status
+group by issued_emp_id 
+having books_count>1
+order by books_count desc;
 ```
 
 ### 3. CTAS (Create Table As Select)
@@ -165,12 +154,22 @@ HAVING COUNT(*) > 1
 - **Task 6: Create Summary Tables**: Used CTAS to generate new tables based on query results - each book and total book_issued_cnt**
 
 ```sql
-CREATE TABLE book_issued_cnt AS
-SELECT b.isbn, b.book_title, COUNT(ist.issued_id) AS issue_count
-FROM issued_status as ist
-JOIN books as b
-ON ist.issued_book_isbn = b.isbn
-GROUP BY b.isbn, b.book_title;
+SELECT 
+    books.isbn,
+    books.book_title,
+    books.category,
+    books.rental_price,
+    books.author,
+    COUNT(*) AS number_of_times_issued
+FROM books
+INNER JOIN issue_status
+    ON issue_status.issued_book_isbn = books.isbn
+GROUP BY 
+    books.isbn,
+    books.book_title,
+    books.category,
+    books.rental_price,
+    books.author;
 ```
 
 
@@ -181,64 +180,63 @@ The following SQL queries were used to address specific questions:
 Task 7. **Retrieve All Books in a Specific Category**:
 
 ```sql
-SELECT * FROM books
-WHERE category = 'Classic';
+select *
+from books
+where category='children';
 ```
 
 8. **Task 8: Find Total Rental Income by Category**:
 
 ```sql
 SELECT 
-    b.category,
-    SUM(b.rental_price),
-    COUNT(*)
-FROM 
-issued_status as ist
-JOIN
-books as b
-ON b.isbn = ist.issued_book_isbn
-GROUP BY 1
+    books.category,
+    SUM(books.rental_price) AS total_income
+FROM books
+INNER JOIN issue_status
+    ON books.isbn = issue_status.issued_book_isbn
+GROUP BY books.category
+ORDER BY total_income;
 ```
 
 9. **List Members Who Registered in the Last 180 Days**:
 ```sql
-SELECT * FROM members
-WHERE reg_date >= CURRENT_DATE - INTERVAL '180 days';
+SELECT *
+FROM members
+WHERE reg_date > CURDATE() - INTERVAL 180 DAY;
 ```
 
 10. **List Employees with Their Branch Manager's Name and their branch details**:
 
 ```sql
 SELECT 
-    e1.emp_id,
-    e1.emp_name,
-    e1.position,
-    e1.salary,
-    b.*,
-    e2.emp_name as manager
-FROM employees as e1
-JOIN 
-branch as b
-ON e1.branch_id = b.branch_id    
-JOIN
-employees as e2
-ON e2.emp_id = b.manager_id
+    employees.*, 
+    branch.manager_id,
+    branch.branch_address,
+    branch.contact_no
+FROM 
+    employees
+INNER JOIN 
+    branch
+ON 
+    branch.branch_id = employees.branch_id
+ORDER BY
+	employee_id;
 ```
 
 Task 11. **Create a Table of Books with Rental Price Above a Certain Threshold**:
 ```sql
-CREATE TABLE expensive_books AS
-SELECT * FROM books
-WHERE rental_price > 7.00;
+create table new as
+select *from books;
+SELECT *
+FROM books
+WHERE rental_price >= 5;
 ```
 
 Task 12: **Retrieve the List of Books Not Yet Returned**
 ```sql
-SELECT * FROM issued_status as ist
-LEFT JOIN
-return_status as rs
-ON rs.issued_id = ist.issued_id
-WHERE rs.return_id IS NULL;
+SELECT *
+FROM books
+WHERE status = 'no';
 ```
 
 ## Advanced SQL Operations
@@ -248,27 +246,19 @@ Write a query to identify members who have overdue books (assume a 30-day return
 
 ```sql
 SELECT 
-    ist.issued_member_id,
-    m.member_name,
-    bk.book_title,
-    ist.issued_date,
-    -- rs.return_date,
-    CURRENT_DATE - ist.issued_date as over_dues_days
-FROM issued_status as ist
-JOIN 
-members as m
-    ON m.member_id = ist.issued_member_id
-JOIN 
-books as bk
-ON bk.isbn = ist.issued_book_isbn
-LEFT JOIN 
-return_status as rs
-ON rs.issued_id = ist.issued_id
-WHERE 
-    rs.return_date IS NULL
-    AND
-    (CURRENT_DATE - ist.issued_date) > 30
-ORDER BY 1
+    members.member_name,
+    issue_status.issued_id,
+    DATEDIFF(
+        IFNULL(return_status.return_date, CURDATE()), 
+        issue_status.issued_date
+    ) AS days_with_member
+FROM 
+    issue_status
+LEFT JOIN return_status 
+    ON issue_status.issued_id = return_status.issued_id
+INNER JOIN members 
+    ON issue_status.issued_member_id = members.member_id;
+
 ```
 
 
@@ -341,30 +331,17 @@ CALL add_return_records('RS148', 'IS140', 'Good');
 Create a query that generates a performance report for each branch, showing the number of books issued, the number of books returned, and the total revenue generated from book rentals.
 
 ```sql
-CREATE TABLE branch_reports
-AS
 SELECT 
     b.branch_id,
-    b.manager_id,
-    COUNT(ist.issued_id) as number_book_issued,
-    COUNT(rs.return_id) as number_of_book_return,
-    SUM(bk.rental_price) as total_revenue
-FROM issued_status as ist
-JOIN 
-employees as e
-ON e.emp_id = ist.issued_emp_id
-JOIN
-branch as b
-ON e.branch_id = b.branch_id
-LEFT JOIN
-return_status as rs
-ON rs.issued_id = ist.issued_id
-JOIN 
-books as bk
-ON ist.issued_book_isbn = bk.isbn
-GROUP BY 1, 2;
-
-SELECT * FROM branch_reports;
+    COUNT(DISTINCT i.issued_id) AS total_issues,
+    COUNT(DISTINCT r.return_id) AS total_returns,
+    COALESCE(SUM(book.rental_price), 0) AS total_earnings
+FROM branch b
+JOIN employees e ON b.branch_id = e.branch_id
+LEFT JOIN issue_status i ON i.issued_emp_id = e.employee_id
+LEFT JOIN books book ON i.issued_book_isbn = book.isbn
+LEFT JOIN return_status r ON i.issued_id = r.issued_id
+GROUP BY b.branch_id;
 ```
 
 **Task 16: CTAS: Create a Table of Active Members**  
@@ -372,18 +349,11 @@ Use the CREATE TABLE AS (CTAS) statement to create a new table active_members co
 
 ```sql
 
-CREATE TABLE active_members
-AS
-SELECT * FROM members
-WHERE member_id IN (SELECT 
-                        DISTINCT issued_member_id   
-                    FROM issued_status
-                    WHERE 
-                        issued_date >= CURRENT_DATE - INTERVAL '2 month'
-                    )
-;
-
-SELECT * FROM active_members;
+CREATE TABLE active_members AS
+SELECT DISTINCT issued_member_id
+FROM issue_status
+WHERE issued_date > (CURRENT_DATE - INTERVAL 6 MONTH);
+select *from active_members;
 
 ```
 
@@ -392,23 +362,25 @@ SELECT * FROM active_members;
 Write a query to find the top 3 employees who have processed the most book issues. Display the employee name, number of books processed, and their branch.
 
 ```sql
-SELECT 
-    e.emp_name,
-    b.*,
-    COUNT(ist.issued_id) as no_book_issued
-FROM issued_status as ist
-JOIN
-employees as e
-ON e.emp_id = ist.issued_emp_id
-JOIN
-branch as b
-ON e.branch_id = b.branch_id
-GROUP BY 1, 2
+SELECT issued_emp_id AS employee_id, COUNT(*) AS issued_count
+FROM issue_status
+GROUP BY issued_emp_id
+ORDER BY issued_count DESC
+LIMIT 3;
 ```
 
 **Task 18: Identify Members Issuing High-Risk Books**  
 Write a query to identify members who have issued books more than twice with the status "damaged" in the books table. Display the member name, book title, and the number of times they've issued damaged books.    
-
+```sql
+SELECT 
+    issue_status.issued_emp_id, 
+    COUNT(*) AS damaged_books_count
+FROM issue_status
+LEFT JOIN books 
+    ON issue_status.issued_book_isbn = books.isbn
+WHERE books.status = 'damaged'
+GROUP BY issue_status.issued_emp_id;
+```
 
 **Task 19: Stored Procedure**
 Objective:
@@ -421,55 +393,35 @@ If the book is available, it should be issued, and the status in the books table
 If the book is not available (status = 'no'), the procedure should return an error message indicating that the book is currently not available.
 
 ```sql
+DELIMITER $$
 
-CREATE OR REPLACE PROCEDURE issue_book(p_issued_id VARCHAR(10), p_issued_member_id VARCHAR(30), p_issued_book_isbn VARCHAR(30), p_issued_emp_id VARCHAR(10))
-LANGUAGE plpgsql
-AS $$
-
-DECLARE
--- all the variabable
-    v_status VARCHAR(10);
-
+CREATE TRIGGER update_book_status_on_issue
+AFTER INSERT ON issue_status
+FOR EACH ROW
 BEGIN
--- all the code
-    -- checking if book is available 'yes'
-    SELECT 
-        status 
-        INTO
-        v_status
-    FROM books
-    WHERE isbn = p_issued_book_isbn;
+    UPDATE books
+    SET status = 'no'
+    WHERE isbn = NEW.issued_book_isbn;
+END$$
 
-    IF v_status = 'yes' THEN
+DELIMITER ;
 
-        INSERT INTO issued_status(issued_id, issued_member_id, issued_date, issued_book_isbn, issued_emp_id)
-        VALUES
-        (p_issued_id, p_issued_member_id, CURRENT_DATE, p_issued_book_isbn, p_issued_emp_id);
+DELIMITER $$
 
-        UPDATE books
-            SET status = 'no'
-        WHERE isbn = p_issued_book_isbn;
+CREATE TRIGGER update_book_status_on_return
+AFTER INSERT ON return_status
+FOR EACH ROW
+BEGIN
+    UPDATE books
+    SET status = 'yes'
+    WHERE isbn = (
+        SELECT issued_book_isbn 
+        FROM issue_status 
+        WHERE issued_id = NEW.issued_id
+    );
+END$$
 
-        RAISE NOTICE 'Book records added successfully for book isbn : %', p_issued_book_isbn;
-
-
-    ELSE
-        RAISE NOTICE 'Sorry to inform you the book you have requested is unavailable book_isbn: %', p_issued_book_isbn;
-    END IF;
-END;
-$$
-
--- Testing The function
-SELECT * FROM books;
--- "978-0-553-29698-2" -- yes
--- "978-0-375-41398-8" -- no
-SELECT * FROM issued_status;
-
-CALL issue_book('IS155', 'C108', '978-0-553-29698-2', 'E104');
-CALL issue_book('IS156', 'C108', '978-0-375-41398-8', 'E104');
-
-SELECT * FROM books
-WHERE isbn = '978-0-375-41398-8'
+DELIMITER ;
 
 ```
 
@@ -486,8 +438,36 @@ Description: Write a CTAS query to create a new table that lists each member and
     Member ID
     Number of overdue books
     Total fines
+```sql
+CREATE TABLE overdue_books_report AS
+SELECT 
+    i.issued_member_id AS member_id,
+    
+    COUNT(
+        CASE 
+            WHEN (r.return_date IS NULL AND DATEDIFF(CURRENT_DATE, i.issued_date) > 30)
+              OR (r.return_date IS NOT NULL AND DATEDIFF(r.return_date, i.issued_date) > 30)
+            THEN 1
+        END
+    ) AS overdue_books,
 
+    SUM(
+        CASE 
+            WHEN r.return_date IS NULL AND DATEDIFF(CURRENT_DATE, i.issued_date) > 30 THEN
+                (DATEDIFF(CURRENT_DATE, i.issued_date) - 30) * 0.50
+            WHEN r.return_date IS NOT NULL AND DATEDIFF(r.return_date, i.issued_date) > 30 THEN
+                (DATEDIFF(r.return_date, i.issued_date) - 30) * 0.50
+            ELSE 0
+        END
+    ) AS total_fine,
 
+    COUNT(*) AS total_books_issued
+
+FROM issue_status i
+LEFT JOIN return_status r ON i.issued_id = r.issued_id
+
+GROUP BY i.issued_member_id;
+```
 
 ## Reports
 
